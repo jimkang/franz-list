@@ -1,0 +1,17 @@
+{
+  "extends": "airbnb-base",
+  "env": {
+    "browser": true,
+    "jest": true,
+  },
+  "globals": {
+    "__DEV__": true,
+    "context": true,
+    "page": true,
+  },
+  "rules": {
+    "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
+    "no-console": "off",
+    "object-curly-newline": "off"
+  }
+}

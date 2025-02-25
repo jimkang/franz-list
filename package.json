@@ -1,0 +1,26 @@
+{
+  "name": "franz-list",
+  "version": "1.0.0",
+  "author": "Jim Kang",
+  "devDependencies": {
+    "assert-no-error": "^1.0.0",
+    "eslint": "^7.8.1",
+    "eslint-plugin-import": "^2.22.0",
+    "http-server": "^14.1.1",
+    "prettier": "^3.0.2",
+    "tap-bail": "^1.0.0",
+    "tape": "^5.6.6"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "lodash.defaultsdeep": "^4.6.1",
+    "lodash.pick": "^4.4.0",
+    "log-format": "^1.0.0",
+    "no-throw-json-parse": "^1.0.0",
+    "oknok": "^3.0.0",
+    "rimraf": "^3.0.2"
+  },
+  "scripts": {
+  }
+}
