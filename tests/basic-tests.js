@@ -12,7 +12,20 @@ var testCases = [
     name: 'Show list without token',
     method: 'GET',
     path: '/list/1/show',
-    expectedStatusCode: 404,
+    expectedStatusCode: 200,
+    async customCheckResponse(t, res) {
+      const body = await res.text();
+      t.ok(
+        body.includes('Enter your email to get a link to this list'),
+        'Without token, an email form is presented.',
+      );
+    },
+  },
+  {
+    name: 'Show list with bad token',
+    method: 'GET',
+    path: '/token/whatever/list/1/show',
+    expectedStatusCode: 401,
   },
 ];
 
@@ -48,16 +61,22 @@ function runTest(testCase) {
     function onFetchFail(error) {
       assertNoError(t.ok, error, 'No error while making request.');
     }
-    function checkResponse(res) {
+
+    async function checkResponse(res) {
       t.equal(
         res.status,
         testCase.expectedStatusCode,
         'Correct status code is returned.',
       );
+
+      if (testCase.customCheckResponse) {
+        await testCase.customCheckResponse(t, res);
+      }
       // if (res.statusCode !== 200) {
       //   console.log('body:', body);
       // }
-      server.close(t.end);
+      // Sadly, I guess the server takes a while to close.
+      server.close(() => setTimeout(t.end, 100));
     }
   }
 }

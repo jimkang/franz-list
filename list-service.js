@@ -1,4 +1,4 @@
-/* global process */
+/* global process, __dirname */
 var express = require('express');
 var cors = require('cors');
 var { getTokenPermissions } = require('./token-store');
@@ -10,6 +10,7 @@ function ListService(done) {
 
   app.get('/health', respondOK);
   app.get('/token/:token/list/:listId/show', cors(), showList);
+  app.get('/list/:listId/show', cors(), showAuthForm);
   app.head(/.*/, respondHead);
 
   process.nextTick(done, null, { app });
@@ -18,7 +19,7 @@ function ListService(done) {
     res.status(204).send();
   }
 
-  async function showList(req, res) {
+  function showList(req, res) {
     if (!req.params.token) {
       res.status(400).json({ message: 'Missing `token` in path.' });
       return;
@@ -46,6 +47,10 @@ function ListService(done) {
     }
 
     res.status(200).send('OK!');
+  }
+
+  function showAuthForm(req, res) {
+    res.status(200).sendFile('html/email-form.html', { root: __dirname });
   }
 
   function respondHead(req, res) {
