@@ -42,3 +42,6 @@ check-status:
 
 check-log:
 	$(SSHCMD) "journalctl -r -u $(PROJECTNAME)"
+
+test:
+	node tests/basic-tests.js

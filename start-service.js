@@ -2,8 +2,9 @@
 
 /* global process */
 var nonBlockingLog = require('./non-blocking-log');
+var logFormat = require('log-format');
 
-var ListService = require('./franz-list-service');
+var ListService = require('./list-service');
 var http = require('http');
 
 const port = 8080;
