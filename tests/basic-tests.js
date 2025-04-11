@@ -22,10 +22,25 @@ var testCases = [
     },
   },
   {
-    name: 'Show list with bad token',
-    method: 'GET',
-    path: '/token/whatever/list/1/show',
-    expectedStatusCode: 401,
+    name: 'Resource request and use',
+    subcases: [
+      {
+        name: 'Show list with bad token',
+        method: 'GET',
+        path: '/token/whatever/list/1/show',
+        expectedStatusCode: 401,
+      },
+      {
+        name: 'Post email to token request',
+        method: 'POST',
+        path: '/request',
+        body: {
+          resource: 'list/1/show',
+          email: 'smidgeo@fastmail.com',
+        },
+        expectedStatusCode: 200,
+      },
+    ],
   },
 ];
 
@@ -49,34 +64,50 @@ function runTest(testCase) {
       server.listen(port, runRequest);
     }
 
-    function runRequest(error) {
+    async function runRequest(error) {
       assertNoError(t.ok, error, 'Server started correctly.');
-      const url = `http://${serverHost}:${port}${testCase.path}`;
+      if (testCase.subcases) {
+        for (let subcase of testCase.subcases) {
+          console.log('Testing subcase', subcase.name);
+          await runCase(subcase);
+        }
+      } else {
+        await runCase(testCase);
+      }
+      // Sadly, I guess the server takes a while to close.
+      server.close(() => setTimeout(t.end, 100));
+    }
+
+    async function runCase(theCase) {
+      const url = `http://${serverHost}:${port}${theCase.path}`;
       var reqOpts = {
-        method: testCase.method,
+        method: theCase.method,
       };
-      fetch(url, reqOpts).then(checkResponse, onFetchFail);
+      try {
+        var res = await fetch(url, reqOpts);
+        checkResponse(res);
+      } catch (error) {
+        onFetchFail(error);
+      }
+
+      async function checkResponse(res) {
+        t.equal(
+          res.status,
+          theCase.expectedStatusCode,
+          'Correct status code is returned.',
+        );
+
+        if (theCase.customCheckResponse) {
+          await theCase.customCheckResponse(t, res);
+        }
+        // if (res.statusCode !== 200) {
+        //   console.log('body:', body);
+        // }
+      }
     }
 
     function onFetchFail(error) {
       assertNoError(t.ok, error, 'No error while making request.');
-    }
-
-    async function checkResponse(res) {
-      t.equal(
-        res.status,
-        testCase.expectedStatusCode,
-        'Correct status code is returned.',
-      );
-
-      if (testCase.customCheckResponse) {
-        await testCase.customCheckResponse(t, res);
-      }
-      // if (res.statusCode !== 200) {
-      //   console.log('body:', body);
-      // }
-      // Sadly, I guess the server takes a while to close.
-      server.close(() => setTimeout(t.end, 100));
     }
   }
 }
