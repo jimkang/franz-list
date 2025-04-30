@@ -1,44 +1,51 @@
-/* global process */
+/* global process, __dirname */
 var test = require('tape');
 var assertNoError = require('assert-no-error');
 var ListService = require('../list-service');
 var http = require('http');
+var path = require('path');
+var fs = require('fs');
 
 const port = 5678;
 const serverHost = process.env.SERVER || 'localhost';
+const serviceBaseURL = `http://${serverHost}:${port}`;
+
+// TODO: Copy initial state of store to working copy.
+const initialStateStorePath = path.join(
+  __dirname,
+  'fixtures/test-store-a-initial-state.json',
+);
+const storePath = initialStateStorePath.replace(
+  'initial-state',
+  'working-copy',
+);
+fs.copyFileSync(initialStateStorePath, storePath);
+initialStateStorePath, storePath;
 
 var testCases = [
   {
-    name: 'Show list without token',
-    method: 'GET',
-    path: '/list/1/show',
-    expectedStatusCode: 200,
-    async customCheckResponse(t, res) {
-      const body = await res.text();
-      t.ok(
-        body.includes('Enter your email to get a link to this list'),
-        'Without token, an email form is presented.',
-      );
-    },
-  },
-  {
-    name: 'Resource request and use',
+    name: 'Add to list, starting without a token',
     subcases: [
       {
-        name: 'Show list with bad token',
+        name: 'Try to add without a token',
         method: 'GET',
-        path: '/token/whatever/list/1/show',
-        expectedStatusCode: 401,
+        path: '/list/First test list/add?email=smidgeo@fastmail.com&token=',
+        expectedStatusCode: 400,
+        async customCheckResponse(t, res) {
+          const body = await res.text();
+          t.ok(
+            body.includes('Enter your email to get a link to this list'),
+            'Without token, an email form is presented.',
+          );
+        },
       },
       {
-        name: 'Post email to token request',
-        method: 'POST',
-        path: '/request',
-        body: {
-          resource: 'list/1/show',
-          email: 'smidgeo@fastmail.com',
-        },
+        name: 'Request token',
+        method: 'GET',
+        path: '/signup?email=smidgeo@fastmail.com&list=First test list',
         expectedStatusCode: 200,
+        expectedMailCmdAddress: 'smidgeo@fastmail.com',
+        expectedMailCmdStdIn: `Thanks for subscribing to First test list! Click here to confirm your subscription: http://${serverHost}:${port}/list/First test list/add?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS`,
       },
     ],
   },
@@ -52,8 +59,48 @@ function runTest(testCase) {
   function testRequest(t) {
     var server;
 
-    ListService(startServer);
+    function MailSender() {
+      var expectedMailCmdAddress;
+      var expectedMailCmdStdIn;
+      var t;
 
+      return {
+        setAddress(address) {
+          expectedMailCmdAddress = address;
+        },
+        setStdIn(stdIn) {
+          expectedMailCmdStdIn = stdIn;
+        },
+        setT(theT) {
+          t = theT;
+        },
+        sendMail(address, stdIn) {
+          if (t) {
+            t.equal(
+              address,
+              expectedMailCmdAddress,
+              'Sent email address is correct.',
+            );
+            t.equal(
+              stdIn,
+              expectedMailCmdStdIn,
+              'Sent stdin content is correct.',
+            );
+          }
+        },
+      };
+    }
+
+    var mailSender = MailSender();
+    ListService(
+      {
+        storePath,
+        sendMail: mailSender.sendMail,
+        seed: 'test-a',
+        serviceBaseURL,
+      },
+      startServer,
+    );
     function startServer(error, { app }) {
       assertNoError(t.ok, error, 'Service created.');
       if (error) {
@@ -79,6 +126,15 @@ function runTest(testCase) {
     }
 
     async function runCase(theCase) {
+      if (theCase.expectedMailCmdAddress) {
+        mailSender.setAddress(theCase.expectedMailCmdAddress);
+      }
+      if (theCase.expectedMailCmdStdIn) {
+        mailSender.setStdIn(theCase.expectedMailCmdStdIn);
+      }
+      if (theCase.expectedMailCmdAddress || theCase.expectedMailCmdStdIn) {
+        mailSender.setT(t);
+      }
       const url = `http://${serverHost}:${port}${theCase.path}`;
       var reqOpts = {
         method: theCase.method,

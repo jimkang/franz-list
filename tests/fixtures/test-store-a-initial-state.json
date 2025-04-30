@@ -1,0 +1,12 @@
+{
+  "tokensForUsers": {
+    "drwily@fastmail.com": { "token": "MOEW", "expiry": "2999-01-01T00:00:00Z" }
+  },
+  "lists": {
+    "First test list": {
+      "listName": "First test list",
+      "listFile": "first-test-list.txt",
+      "subscribers": []
+    }
+  }
+}
