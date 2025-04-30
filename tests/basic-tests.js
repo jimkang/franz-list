@@ -5,6 +5,7 @@ var ListService = require('../list-service');
 var http = require('http');
 var path = require('path');
 var fs = require('fs');
+var noThrowJSONParse = require('no-throw-json-parse');
 
 const port = 5678;
 const serverHost = process.env.SERVER || 'localhost';
@@ -46,6 +47,32 @@ var testCases = [
         expectedStatusCode: 200,
         expectedMailCmdAddress: 'smidgeo@fastmail.com',
         expectedMailCmdStdIn: `Thanks for subscribing to First test list! Click here to confirm your subscription: http://${serverHost}:${port}/list/First test list/add?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS`,
+      },
+      {
+        name: 'Add with a token',
+        method: 'GET',
+        path: '/list/First test list/add?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS',
+        expectedStatusCode: 201,
+        async customCheckResponse(t, res) {
+          const body = await res.text();
+          t.ok(
+            body.includes(
+              'You have successfully subscribed to First test list!',
+            ),
+            'With token, the user is able to subscribe.',
+          );
+          var storeCopy = noThrowJSONParse(
+            fs.readFileSync(storePath, { encoding: 'utf8' }),
+            {},
+          );
+          t.ok(
+            storeCopy.lists['First test list'].subscribers.includes(
+              'smidgeo@fastmail.com',
+            ),
+            "The store now has the email in the list's subscribers.",
+          );
+          // TODO: Check list text file, too.
+        },
       },
     ],
   },
