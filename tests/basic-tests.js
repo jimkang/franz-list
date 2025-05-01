@@ -57,7 +57,7 @@ var testCases = [
           const body = await res.text();
           t.ok(
             body.includes(
-              'You have successfully subscribed to First test list!',
+              'You have successfully subscribed to First test list',
             ),
             'With token, the user is able to subscribe.',
           );
@@ -162,6 +162,7 @@ function runTest(testCase) {
       if (theCase.expectedMailCmdAddress || theCase.expectedMailCmdStdIn) {
         mailSender.setT(t);
       }
+
       const url = `http://${serverHost}:${port}${theCase.path}`;
       var reqOpts = {
         method: theCase.method,

@@ -6,8 +6,18 @@ var fs = require('fs');
 var VError = require('verror');
 var RandomId = require('@jimkang/randomid');
 var seedrandom = require('seedrandom');
+var nonBlockingLog = require('./non-blocking-log');
 
-function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
+function ListService(
+  {
+    storePath,
+    sendMail,
+    seed,
+    serviceBaseURL,
+    tokenLifespanInMS = 1000 * 60 * 60 * 24 * 14,
+  },
+  done,
+) {
   var storeText = fs.readFileSync(storePath, { encoding: 'utf8' });
   if (!storeText) {
     done(
@@ -59,13 +69,18 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       return;
     }
 
-    var token = store.tokensForUsers[req.query.email];
-    if (!token || token !== req.query.token) {
+    var tokenObj = store.tokensForUsers[req.query.email];
+    // TODO: Check expiry
+    if (!tokenObj || tokenObj.token !== req.query.token) {
       res.status(401).sendFile('html/email-form.html', { root: __dirname });
       return;
     }
 
-    res.status(200).send('OK!');
+    // TODO: Actually add to list
+
+    res
+      .status(201)
+      .send(`OK! You have successfully subscribed to ${req.params.listId}.`);
   }
 
   function signUp(req, res) {
@@ -82,7 +97,12 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
     }
 
     const token = randomId(16);
-    // TODO: Store token.
+    // Store token.
+    store.tokensForUsers[req.query.email] = {
+      token,
+      expiry: new Date(Date.now() + tokenLifespanInMS).toISOString(),
+    };
+    commitStore(store);
 
     const message = `Thanks for subscribing to First test list! Click here to confirm your subscription: ${serviceBaseURL}/list/${req.query.list}/add?email=${req.query.email}&token=${token}`;
     sendMail(req.query.email, message);
@@ -99,6 +119,17 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       res.writeHead(200, 'OK');
     }
     res.end();
+  }
+
+  function commitStore(store) {
+    const storeText = JSON.stringify(store, null, 2);
+    fs.writeFile(storePath, storeText, { encoding: 'utf8' }, handleError);
+
+    function handleError(error) {
+      if (error) {
+        nonBlockingLog('Error while committing to', storePath, error);
+      }
+    }
   }
 }
 
