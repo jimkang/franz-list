@@ -61,7 +61,7 @@ function ListService(
 
   function addSubscriber(req, res) {
     if (!req.params.listId) {
-      res.status(400).json({ message: 'Missing `listId` in path.' });
+      res.status(400).send('Missing `listId` in path.');
       return;
     }
     if (!req.query.email || !req.query.token) {
@@ -76,11 +76,31 @@ function ListService(
       return;
     }
 
-    // TODO: Actually add to list
+    // Add to list
+    var list = store.lists[req.params.listId];
+    if (!list) {
+      res.status(400).send('List does not exist.');
+      return;
+    }
 
-    res
-      .status(201)
-      .send(`OK! You have successfully subscribed to ${req.params.listId}.`);
+    list.subscribers.push(req.query.email);
+    fs.writeFile(
+      storePath,
+      JSON.stringify(store, null, 2),
+      { encoding: 'utf8' },
+      writeFileDone,
+    );
+
+    function writeFileDone(error) {
+      if (error) {
+        nonBlockingLog('Error while trying to commit store:', error);
+        res.status(500).send('Could not commit to the list. Try again, maybe.');
+        return;
+      }
+      res
+        .status(201)
+        .send(`OK! You have successfully subscribed to ${req.params.listId}.`);
+    }
   }
 
   function signUp(req, res) {
