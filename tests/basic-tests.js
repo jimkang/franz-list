@@ -71,7 +71,22 @@ var testCases = [
             ),
             "The store now has the email in the list's subscribers.",
           );
-          // TODO: Check list text file, too.
+          storeCopy = noThrowJSONParse(
+            fs.readFileSync(storePath, { encoding: 'utf8' }),
+            {},
+          );
+
+          t.deepEqual(
+            storeCopy.tokensForUsers['smidgeo@fastmail.com'].token,
+            'pUtuZmLloZJUqccS',
+            'The token is in the store file.',
+          );
+          t.ok(
+            storeCopy.lists['First test list'].subscribers.includes(
+              'smidgeo@fastmail.com',
+            ),
+            "The email is now in the list's subscribers in the store file.",
+          );
         },
       },
     ],
