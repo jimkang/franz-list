@@ -11,11 +11,11 @@ const port = 5678;
 const serverHost = process.env.SERVER || 'localhost';
 const serviceBaseURL = `http://${serverHost}:${port}`;
 
-// TODO: Copy initial state of store to working copy.
 const initialStateStorePath = path.join(
   __dirname,
   'fixtures/test-store-a-initial-state.json',
 );
+// Copy initial state of store to working copy.
 const storePath = initialStateStorePath.replace(
   'initial-state',
   'working-copy',
@@ -61,19 +61,17 @@ var testCases = [
             ),
             'With token, the user is able to subscribe.',
           );
+
           var storeCopy = noThrowJSONParse(
             fs.readFileSync(storePath, { encoding: 'utf8' }),
             {},
           );
+
           t.ok(
             storeCopy.lists['First test list'].subscribers.includes(
               'smidgeo@fastmail.com',
             ),
             "The store now has the email in the list's subscribers.",
-          );
-          storeCopy = noThrowJSONParse(
-            fs.readFileSync(storePath, { encoding: 'utf8' }),
-            {},
           );
 
           t.deepEqual(
@@ -81,11 +79,49 @@ var testCases = [
             'pUtuZmLloZJUqccS',
             'The token is in the store file.',
           );
+        },
+      },
+
+      {
+        name: 'Unsubscribe',
+        method: 'GET',
+        path: '/list/First test list/remove?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS',
+        expectedStatusCode: 201,
+        async customCheckResponse(t, res) {
+          const body = await res.text();
           t.ok(
-            storeCopy.lists['First test list'].subscribers.includes(
+            body.includes(
+              'You have successfully unsubscribed to First test list',
+            ),
+            'With token, the user is able to unsubscribe.',
+          );
+
+          var storeCopy = noThrowJSONParse(
+            fs.readFileSync(storePath, { encoding: 'utf8' }),
+            {},
+          );
+
+          t.ok(
+            !storeCopy.lists['First test list'].subscribers.includes(
               'smidgeo@fastmail.com',
             ),
-            "The email is now in the list's subscribers in the store file.",
+            "The store no longer has the email in the list's subscribers.",
+          );
+          storeCopy = noThrowJSONParse(
+            fs.readFileSync(storePath, { encoding: 'utf8' }),
+            {},
+          );
+
+          t.equal(
+            storeCopy.tokensForUsers['smidgeo@fastmail.com'].token,
+            'pUtuZmLloZJUqccS',
+            'The token is still in the store file.',
+          );
+          t.ok(
+            !storeCopy.lists['First test list'].subscribers.includes(
+              'smidgeo@fastmail.com',
+            ),
+            "The email is no longer in the list's subscribers in the store file.",
           );
         },
       },
