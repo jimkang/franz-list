@@ -157,7 +157,6 @@ function runTest(testCase) {
       assertNoError(t.ok, error, 'Server started correctly.');
       if (testCase.subcases) {
         for (let subcase of testCase.subcases) {
-          console.log('Testing subcase', subcase.name);
           await runCase(subcase);
         }
       } else {
@@ -190,6 +189,7 @@ function runTest(testCase) {
       }
 
       async function checkResponse(res) {
+        console.log('## Testing subcase:', theCase.name);
         t.equal(
           res.status,
           theCase.expectedStatusCode,
