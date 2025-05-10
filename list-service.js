@@ -50,6 +50,7 @@ function ListService(
 
   app.get('/health', respondOK);
   app.get('/list/:listId/add', cors(), addSubscriber);
+  app.get('/list/:listId/remove', cors(), removeSubscriber);
   app.get('/signup', cors(), signUp);
   app.head(/.*/, respondHead);
 
@@ -100,6 +101,63 @@ function ListService(
       res
         .status(201)
         .send(`OK! You have successfully subscribed to ${req.params.listId}.`);
+    }
+  }
+
+  // TODO: DRY stuff that duplicates addSubscriber code.
+  function removeSubscriber(req, res) {
+    if (!req.params.listId) {
+      res.status(400).send('Missing `listId` in path.');
+      return;
+    }
+    if (!req.query.email || !req.query.token) {
+      res.status(400).sendFile('html/email-form.html', { root: __dirname });
+      return;
+    }
+
+    var tokenObj = store.tokensForUsers[req.query.email];
+
+    // TODO: Check expiry
+    if (!tokenObj || tokenObj.token !== req.query.token) {
+      res.status(401).sendFile('html/email-form.html', { root: __dirname });
+      return;
+    }
+
+    // Remove from list
+    var list = store.lists[req.params.listId];
+    if (!list) {
+      res.status(400).send('List does not exist.');
+      return;
+    }
+
+    const subIndex = list.subscribers.findIndex(
+      (sub) => sub === req.query.email,
+    );
+    if (subIndex === -1) {
+      res.status(400).send("I can't find that email.");
+      return;
+    }
+
+    list.subscribers.splice(subIndex, 1);
+
+    fs.writeFile(
+      storePath,
+      JSON.stringify(store, null, 2),
+      { encoding: 'utf8' },
+      writeFileDone,
+    );
+
+    function writeFileDone(error) {
+      if (error) {
+        nonBlockingLog('Error while trying to commit store:', error);
+        res.status(500).send('Could not commit to the list. Try again, maybe.');
+        return;
+      }
+      res
+        .status(201)
+        .send(
+          `OK! You have successfully unsubscribed from ${req.params.listId}.`,
+        );
     }
   }
 

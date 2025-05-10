@@ -24,6 +24,7 @@ fs.copyFileSync(initialStateStorePath, storePath);
 initialStateStorePath, storePath;
 
 var testCases = [
+  // TODO: Allow adding without a token
   {
     name: 'Add to list, starting without a token',
     subcases: [
@@ -91,7 +92,7 @@ var testCases = [
           const body = await res.text();
           t.ok(
             body.includes(
-              'You have successfully unsubscribed to First test list',
+              'You have successfully unsubscribed from First test list',
             ),
             'With token, the user is able to unsubscribe.',
           );
