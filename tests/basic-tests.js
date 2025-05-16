@@ -24,35 +24,26 @@ fs.copyFileSync(initialStateStorePath, storePath);
 initialStateStorePath, storePath;
 
 var testCases = [
-  // TODO: Allow adding without a token
   {
     name: 'Add to list, starting without a token',
     subcases: [
       {
-        name: 'Try to add without a token',
+        name: 'Add to list without an email',
         method: 'GET',
-        path: '/list/First test list/add?email=smidgeo@fastmail.com&token=',
+        path: '/list/First test list/add',
         expectedStatusCode: 400,
         async customCheckResponse(t, res) {
           const body = await res.text();
           t.ok(
-            body.includes('Enter your email to get a link to this list'),
-            'Without token, an email form is presented.',
+            body.includes('Provide an email to subscribe'),
+            'Without email, an email form is presented.',
           );
         },
       },
       {
-        name: 'Request token',
+        name: 'Add to list',
         method: 'GET',
-        path: '/signup?email=smidgeo@fastmail.com&list=First test list',
-        expectedStatusCode: 200,
-        expectedMailCmdAddress: 'smidgeo@fastmail.com',
-        expectedMailCmdStdIn: `Thanks for subscribing to First test list! Click here to confirm your subscription: http://${serverHost}:${port}/list/First test list/add?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS`,
-      },
-      {
-        name: 'Add with a token',
-        method: 'GET',
-        path: '/list/First test list/add?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS',
+        path: '/list/First test list/add?email=smidgeo@fastmail.com',
         expectedStatusCode: 201,
         async customCheckResponse(t, res) {
           const body = await res.text();

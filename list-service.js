@@ -51,7 +51,6 @@ function ListService(
   app.get('/health', respondOK);
   app.get('/list/:listId/add', cors(), addSubscriber);
   app.get('/list/:listId/remove', cors(), removeSubscriber);
-  app.get('/signup', cors(), signUp);
   app.head(/.*/, respondHead);
 
   process.nextTick(done, null, { app });
@@ -65,26 +64,21 @@ function ListService(
       res.status(400).send('Missing `listId` in path.');
       return;
     }
-    if (!req.query.email || !req.query.token) {
+    if (!req.query.email) {
       res.status(400).sendFile('html/email-form.html', { root: __dirname });
       return;
     }
 
-    var tokenObj = store.tokensForUsers[req.query.email];
-    // TODO: Check expiry
-    if (!tokenObj || tokenObj.token !== req.query.token) {
-      res.status(401).sendFile('html/email-form.html', { root: __dirname });
-      return;
-    }
+    const token = addToken({ email: req.query.email });
 
-    // Add to list
+    // Add to list.
     var list = store.lists[req.params.listId];
     if (!list) {
       res.status(400).send('List does not exist.');
       return;
     }
-
     list.subscribers.push(req.query.email);
+
     fs.writeFile(
       storePath,
       JSON.stringify(store, null, 2),
@@ -98,6 +92,9 @@ function ListService(
         res.status(500).send('Could not commit to the list. Try again, maybe.');
         return;
       }
+
+      const message = `Thanks for subscribing to ${req.query.list}! To unsubscribe click here: ${serviceBaseURL}/list/${req.query.list}/remove?email=${req.query.email}&token=${token}`;
+      sendMail(req.query.email, message);
       res
         .status(201)
         .send(`OK! You have successfully subscribed to ${req.params.listId}.`);
@@ -161,31 +158,15 @@ function ListService(
     }
   }
 
-  function signUp(req, res) {
-    if (!req.query.email || !req.query.list) {
-      res
-        .status(400)
-        .send('You need to provide an email and choose a list to sign up.');
-      return;
-    }
-    var list = store.lists[req.query.list];
-    if (!list) {
-      res.status(400).send('That list does not exist.');
-      return;
-    }
-
+  function addToken({ email }) {
     const token = randomId(16);
     // Store token.
-    store.tokensForUsers[req.query.email] = {
+    store.tokensForUsers[email] = {
       token,
       expiry: new Date(Date.now() + tokenLifespanInMS).toISOString(),
     };
     commitStore(store);
-
-    const message = `Thanks for subscribing to First test list! Click here to confirm your subscription: ${serviceBaseURL}/list/${req.query.list}/add?email=${req.query.email}&token=${token}`;
-    sendMail(req.query.email, message);
-
-    res.status(200).send('OK! Check your mail for the confirmation link.');
+    return token;
   }
 
   function respondHead(req, res) {
