@@ -44,4 +44,5 @@ check-log:
 	$(SSHCMD) "journalctl -r -u $(PROJECTNAME)"
 
 test:
+	rm tests/fixtures/test-store-a-working-copy.json
 	node tests/basic-tests.js

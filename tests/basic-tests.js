@@ -45,6 +45,9 @@ var testCases = [
         method: 'GET',
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
         expectedStatusCode: 201,
+        expectedMailCmdAddress: 'smidgeo@fastmail.com',
+        expectedMailCmdStdIn: `Thanks for subscribing to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS`,
+
         async customCheckResponse(t, res) {
           const body = await res.text();
           t.ok(
@@ -171,10 +174,11 @@ function runTest(testCase) {
       },
       startServer,
     );
+
     function startServer(error, { app }) {
       assertNoError(t.ok, error, 'Service created.');
       if (error) {
-        console.log('Error creating servce:', error);
+        console.log('Error creating service:', error);
         process.exit();
       }
       server = http.createServer(app);

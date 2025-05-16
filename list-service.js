@@ -93,7 +93,7 @@ function ListService(
         return;
       }
 
-      const message = `Thanks for subscribing to ${req.query.list}! To unsubscribe click here: ${serviceBaseURL}/list/${req.query.list}/remove?email=${req.query.email}&token=${token}`;
+      const message = `Thanks for subscribing to ${list.listName}! To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${req.query.email}&token=${token}`;
       sendMail(req.query.email, message);
       res
         .status(201)
