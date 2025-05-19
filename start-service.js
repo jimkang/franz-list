@@ -3,13 +3,21 @@
 /* global process */
 var nonBlockingLog = require('./non-blocking-log');
 var logFormat = require('log-format');
-
 var ListService = require('./list-service');
 var http = require('http');
+var { sendMailWithSendmail } = require('./senders/sendmail-sender');
+require('dotenv').config();
 
-const port = 8080;
+const port = 6667;
 
-ListService(createServer);
+ListService(
+  {
+    storePath: process.env.STORE_PATH,
+    serviceBaseURL: 'https://smidgeo.com/franz-list',
+    sendMail: sendMailWithSendmail,
+  },
+  createServer,
+);
 
 function createServer(error, { app }) {
   nonBlockingLog('Starting service.\n');

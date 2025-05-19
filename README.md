@@ -10,3 +10,12 @@ When a client requests a change to a record, the service first emails a key to t
 ## Is it secure?
 
 This app is not battle-tested nor meant for any application that deals with safety or money. It does provide deterrence against the lazier vandals, though.
+
+# Setup
+
+- Create a `.env` file containing a STORE_PATH that points to a JSON file that will serve as the store for the app.
+- There is an example store file in [tests/fixtures/test-store-a-initial-state.json].
+
+## TODO
+
+- Run it for real?

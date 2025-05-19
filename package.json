@@ -15,6 +15,7 @@
     "@jimkang/randomid": "^1.1.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
     "express": "^4.17.1",
     "lodash.defaultsdeep": "^4.6.1",
     "log-format": "^1.0.0",

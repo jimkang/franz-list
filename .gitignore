@@ -5,3 +5,4 @@ config*.mk
 *.swp
 .env
 tests/fixtures/*working-copy.json
+stores/*

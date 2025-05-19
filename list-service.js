@@ -74,7 +74,7 @@ function ListService(
     // Add to list.
     var list = store.lists[req.params.listId];
     if (!list) {
-      res.status(400).send('List does not exist.');
+      res.status(404).send('List does not exist.');
       return;
     }
     list.subscribers.push(req.query.email);
@@ -94,10 +94,24 @@ function ListService(
       }
 
       const message = `Thanks for subscribing to ${list.listName}! To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${req.query.email}&token=${token}`;
-      sendMail(req.query.email, message);
-      res
-        .status(201)
-        .send(`OK! You have successfully subscribed to ${req.params.listId}.`);
+      sendMail(req.query.email, message, sendMailDone);
+
+      function sendMailDone(error) {
+        if (error) {
+          res
+            .status(500)
+            .send(
+              'You have subscribed, but we were not able to get the confirmation email to you.',
+            );
+          return;
+        }
+
+        res
+          .status(201)
+          .send(
+            `OK! You have successfully subscribed to ${req.params.listId}.`,
+          );
+      }
     }
   }
 
@@ -123,7 +137,7 @@ function ListService(
     // Remove from list
     var list = store.lists[req.params.listId];
     if (!list) {
-      res.status(400).send('List does not exist.');
+      res.status(404).send('List does not exist.');
       return;
     }
 
@@ -131,7 +145,7 @@ function ListService(
       (sub) => sub === req.query.email,
     );
     if (subIndex === -1) {
-      res.status(400).send("I can't find that email.");
+      res.status(404).send("I can't find that email.");
       return;
     }
 

@@ -54,7 +54,7 @@ var testCases = [
             body.includes(
               'You have successfully subscribed to First test list',
             ),
-            'With token, the user is able to subscribe.',
+            'The user is able to subscribe.',
           );
 
           var storeCopy = noThrowJSONParse(
@@ -147,7 +147,7 @@ function runTest(testCase) {
         setT(theT) {
           t = theT;
         },
-        sendMail(address, stdIn) {
+        sendMail(address, stdIn, done) {
           if (t) {
             t.equal(
               address,
@@ -160,6 +160,7 @@ function runTest(testCase) {
               'Sent stdin content is correct.',
             );
           }
+          queueMicrotask(done);
         },
       };
     }

@@ -14,6 +14,7 @@ run:
 
 sync:
 	rsync -a $(HOMEDIR)/ $(USER)@$(SERVER):$(APPDIR) --exclude node_modules/ \
+		--exclude stores/ \
 	  --omit-dir-times --no-perms
 	$(SSHCMD) "cd /opt/$(PROJECTNAME) && npm install"
 
@@ -35,13 +36,16 @@ install-service:
 set-up-app-dir:
 	$(SSHCMD) "mkdir -p $(APPDIR)"
 
+set-permissions:
+	$(SSHCMD) "chmod +x $(APPDIR)/start-service.js"
+
 initial-setup: set-up-app-dir sync set-permissions install-service
 
 check-status:
 	$(SSHCMD) "systemctl status $(PROJECTNAME)"
 
 check-log:
-	$(SSHCMD) "journalctl -r -u $(PROJECTNAME)"
+	$(SSHCMD) "journalctl -r -u $(PROJECTNAME)" | more
 
 test:
 	rm tests/fixtures/test-store-a-working-copy.json
