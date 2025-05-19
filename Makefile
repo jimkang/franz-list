@@ -18,6 +18,9 @@ sync:
 	  --omit-dir-times --no-perms
 	$(SSHCMD) "cd /opt/$(PROJECTNAME) && npm install"
 
+overwrite-stores:
+	rsync -avz $(HOMEDIR)/stores/* $(USER)@$(SERVER):$(APPDIR)/stores/
+
 restart-remote:
 	$(PRIVSSHCMD) "service $(PROJECTNAME) restart"
 
