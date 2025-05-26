@@ -97,8 +97,8 @@ function ListService(
       sendMail(req.query.email, message, sendMailDone);
 
       function sendMailDone(error) {
-        nonBlockingLog('Error from sending mail:', error);
         if (error) {
+          nonBlockingLog('Error from sending mail:', error.message);
           res
             .status(500)
             .send(

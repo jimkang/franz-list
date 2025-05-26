@@ -5,7 +5,8 @@ var nonBlockingLog = require('./non-blocking-log');
 var logFormat = require('log-format');
 var ListService = require('./list-service');
 var http = require('http');
-var { sendMailWithSendmail } = require('./senders/sendmail-sender');
+// var { sendMailWithSendmail } = require('./senders/sendmail-sender');
+var { sendMailWithFastmail } = require('./senders/fastmail-sender');
 require('dotenv').config();
 
 const port = 6667;
@@ -14,7 +15,8 @@ ListService(
   {
     storePath: process.env.STORE_PATH,
     serviceBaseURL: 'https://smidgeo.com/franz-list',
-    sendMail: sendMailWithSendmail,
+    sendMail: sendMailWithFastmail,
+    // sendMail: sendMailWithSendmail,
   },
   createServer,
 );
