@@ -54,7 +54,11 @@ function ListService(
   app.get('/list/:listId/remove', cors(), removeSubscriber);
   app.head(/.*/, respondHead);
 
-  process.nextTick(done, null, { app });
+  process.nextTick(done, null, { app, setSendEmail });
+
+  function setSendEmail(newSendMail) {
+    sendMail = newSendMail;
+  }
 
   function respondOK(req, res) {
     res.status(204).send();

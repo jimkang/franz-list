@@ -6,6 +6,10 @@ var http = require('http');
 var path = require('path');
 var fs = require('fs');
 var noThrowJSONParse = require('no-throw-json-parse');
+var {
+  TestMailSender,
+  DoNotCallMailSender,
+} = require('./fixtures/test-mail-senders');
 
 const port = 5678;
 const serverHost = process.env.SERVER || 'localhost';
@@ -82,6 +86,7 @@ var testCases = [
         name: 'Attempt to add email already in list to list',
         method: 'GET',
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
+        MailSenderCtor: DoNotCallMailSender,
         expectedStatusCode: 202,
         // expectedMailCmdAddress: 'smidgeo@fastmail.com',
         // expectedMailCmdStdIn: `You are already subscribed to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
@@ -168,41 +173,9 @@ function runTest(testCase) {
 
   function testRequest(t) {
     var server;
+    var setSendEmailFn;
 
-    function MailSender() {
-      var expectedMailCmdAddress;
-      var expectedMailCmdStdIn;
-      var t;
-
-      return {
-        setAddress(address) {
-          expectedMailCmdAddress = address;
-        },
-        setStdIn(stdIn) {
-          expectedMailCmdStdIn = stdIn;
-        },
-        setT(theT) {
-          t = theT;
-        },
-        sendMail(address, stdIn, done) {
-          if (t) {
-            t.equal(
-              address,
-              expectedMailCmdAddress,
-              'Sent email address is correct.',
-            );
-            t.equal(
-              stdIn,
-              expectedMailCmdStdIn,
-              'Sent stdin content is correct.',
-            );
-          }
-          queueMicrotask(done);
-        },
-      };
-    }
-
-    var mailSender = MailSender();
+    var mailSender = TestMailSender();
     ListService(
       {
         storePath,
@@ -213,12 +186,13 @@ function runTest(testCase) {
       startServer,
     );
 
-    function startServer(error, { app }) {
+    function startServer(error, { app, setSendEmail }) {
       assertNoError(t.ok, error, 'Service created.');
       if (error) {
         console.log('Error creating service:', error);
         process.exit();
       }
+      setSendEmailFn = setSendEmail;
       server = http.createServer(app);
       server.listen(port, runRequest);
     }
@@ -237,6 +211,12 @@ function runTest(testCase) {
     }
 
     async function runCase(theCase) {
+      if (theCase.MailSenderCtor) {
+        let customEmailSender = theCase.MailSenderCtor();
+        customEmailSender.setT(t);
+        setSendEmailFn(customEmailSender.sendMail);
+      }
+
       if (theCase.expectedMailCmdAddress) {
         mailSender.setAddress(theCase.expectedMailCmdAddress);
       }
