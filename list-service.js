@@ -70,6 +70,19 @@ function ListService(
       return;
     }
 
+    var list = store.lists[req.params.listId];
+    if (!list) {
+      res.status(404).send('List does not exist.');
+      return;
+    }
+
+    if (list.subscribers.includes(req.query.email)) {
+      res
+        .status(202)
+        .send(`You have already subscribed to ${req.params.listId}.`);
+      return;
+    }
+
     var token;
     try {
       token = await addToken({ email: req.query.email });
@@ -79,11 +92,6 @@ function ListService(
     }
 
     // Add to list.
-    var list = store.lists[req.params.listId];
-    if (!list) {
-      res.status(404).send('List does not exist.');
-      return;
-    }
     list.subscribers.push(req.query.email);
 
     fs.writeFile(

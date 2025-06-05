@@ -22,6 +22,8 @@ const storePath = initialStateStorePath.replace(
 );
 fs.copyFileSync(initialStateStorePath, storePath);
 
+const expectedToken = 'pUtuZmLloZJUqccS';
+
 var testCases = [
   {
     name: 'Add to list, starting without a token',
@@ -45,7 +47,7 @@ var testCases = [
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
         expectedStatusCode: 201,
         expectedMailCmdAddress: 'smidgeo@fastmail.com',
-        expectedMailCmdStdIn: `Thanks for subscribing to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS`,
+        expectedMailCmdStdIn: `Thanks for subscribing to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
 
         async customCheckResponse(t, res) {
           const body = await res.text();
@@ -70,7 +72,43 @@ var testCases = [
 
           t.deepEqual(
             storeCopy.tokensForUsers['smidgeo@fastmail.com'].token,
-            'pUtuZmLloZJUqccS',
+            expectedToken,
+            'The token is in the store file.',
+          );
+        },
+      },
+
+      {
+        name: 'Attempt to add email already in list to list',
+        method: 'GET',
+        path: '/list/First test list/add?email=smidgeo@fastmail.com',
+        expectedStatusCode: 202,
+        // expectedMailCmdAddress: 'smidgeo@fastmail.com',
+        // expectedMailCmdStdIn: `You are already subscribed to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
+
+        async customCheckResponse(t, res) {
+          const body = await res.text();
+          t.ok(
+            body.includes('You have already subscribed to First test list'),
+            'The user is informed that they are subscribed.',
+          );
+
+          var storeCopy = noThrowJSONParse(
+            fs.readFileSync(storePath, { encoding: 'utf8' }),
+            {},
+          );
+
+          t.equal(
+            storeCopy.lists['First test list'].subscribers.filter(
+              (email) => email === 'smidgeo@fastmail.com',
+            ).length,
+            1,
+            "The store has the email in the list's subscribers only once.",
+          );
+
+          t.deepEqual(
+            storeCopy.tokensForUsers['smidgeo@fastmail.com'].token,
+            expectedToken,
             'The token is in the store file.',
           );
         },
@@ -79,7 +117,7 @@ var testCases = [
       {
         name: 'Unsubscribe',
         method: 'GET',
-        path: '/list/First test list/remove?email=smidgeo@fastmail.com&token=pUtuZmLloZJUqccS',
+        path: `/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
         expectedStatusCode: 201,
         async customCheckResponse(t, res) {
           const body = await res.text();
@@ -108,7 +146,7 @@ var testCases = [
 
           t.equal(
             storeCopy.tokensForUsers['smidgeo@fastmail.com'].token,
-            'pUtuZmLloZJUqccS',
+            expectedToken,
             'The token is still in the store file.',
           );
           t.ok(
