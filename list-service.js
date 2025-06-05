@@ -3,6 +3,7 @@ var express = require('express');
 var cors = require('cors');
 var bodyParser = require('body-parser');
 var fs = require('fs');
+var fsPromises = require('fs/promises');
 var VError = require('verror');
 var RandomId = require('@jimkang/randomid');
 var seedrandom = require('seedrandom');
@@ -59,7 +60,7 @@ function ListService(
     res.status(204).send();
   }
 
-  function addSubscriber(req, res) {
+  async function addSubscriber(req, res) {
     if (!req.params.listId) {
       res.status(400).send('Missing `listId` in path.');
       return;
@@ -69,7 +70,13 @@ function ListService(
       return;
     }
 
-    const token = addToken({ email: req.query.email });
+    var token;
+    try {
+      token = await addToken({ email: req.query.email });
+    } catch (error) {
+      res.status(500).send('Error while committing token');
+      return;
+    }
 
     // Add to list.
     var list = store.lists[req.params.listId];
@@ -173,14 +180,15 @@ function ListService(
     }
   }
 
-  function addToken({ email }) {
+  // #throws
+  async function addToken({ email }) {
     const token = randomId(16);
     // Store token.
     store.tokensForUsers[email] = {
       token,
       expiry: new Date(Date.now() + tokenLifespanInMS).toISOString(),
     };
-    commitStore(store);
+    await commitStore(store);
     return token;
   }
 
@@ -195,15 +203,10 @@ function ListService(
     res.end();
   }
 
-  function commitStore(store) {
+  // #throws
+  async function commitStore(store) {
     const storeText = JSON.stringify(store, null, 2);
-    fs.writeFile(storePath, storeText, { encoding: 'utf8' }, handleError);
-
-    function handleError(error) {
-      if (error) {
-        nonBlockingLog('Error while committing to', storePath, error);
-      }
-    }
+    return fsPromises.writeFile(storePath, storeText, { encoding: 'utf8' });
   }
 }
 
