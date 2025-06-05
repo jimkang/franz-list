@@ -21,7 +21,6 @@ const storePath = initialStateStorePath.replace(
   'working-copy',
 );
 fs.copyFileSync(initialStateStorePath, storePath);
-initialStateStorePath, storePath;
 
 var testCases = [
   {
