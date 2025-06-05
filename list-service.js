@@ -9,16 +9,7 @@ var RandomId = require('@jimkang/randomid');
 var seedrandom = require('seedrandom');
 var nonBlockingLog = require('./non-blocking-log');
 
-function ListService(
-  {
-    storePath,
-    sendMail,
-    seed,
-    serviceBaseURL,
-    tokenLifespanInMS = 1000 * 60 * 60 * 24 * 14,
-  },
-  done,
-) {
+function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   var storeText = fs.readFileSync(storePath, { encoding: 'utf8' });
   if (!storeText) {
     done(
@@ -148,7 +139,6 @@ function ListService(
 
     var tokenObj = store.tokensForUsers[req.query.email];
 
-    // TODO: Check expiry
     if (!tokenObj || tokenObj.token !== req.query.token) {
       res.status(401).sendFile('html/email-form.html', { root: __dirname });
       return;
@@ -198,7 +188,6 @@ function ListService(
     // Store token.
     store.tokensForUsers[email] = {
       token,
-      expiry: new Date(Date.now() + tokenLifespanInMS).toISOString(),
     };
     await commitStore(store);
     return token;
