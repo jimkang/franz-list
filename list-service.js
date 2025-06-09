@@ -43,6 +43,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   app.get('/health', respondOK);
   app.get('/list/:listId/add', cors(), addSubscriber);
   app.get('/list/:listId/remove', cors(), removeSubscriber);
+  app.post('/send/:listId', cors(), checkBearer, sendToList);
   app.head(/.*/, respondHead);
 
   process.nextTick(done, null, { app, setSendEmail });
@@ -182,6 +183,53 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
     }
   }
 
+  async function sendToList(req, res) {
+    if (!req.body.message) {
+      res.status(400).send('Missing message.');
+      return;
+    }
+    if (!req.body.listId) {
+      res.status(400).send('Missing listId.');
+      return;
+    }
+
+    // Get list, send to each email.
+    var list = store.lists[req.body.listId];
+    if (!list) {
+      res.status(404).send('List does not exist.');
+      return;
+    }
+
+    var sendPromises = list.subscribers.map((subscriber) =>
+      sendMessageToEmail({ email: subscriber, message: req.body.message }),
+    );
+    try {
+      var results = await Promise.allSettled(sendPromises);
+      var failures = results.filter((result) => result.status === 'rejected');
+      if (failures.length < 1) {
+        res.status(200).send('Message sent to all subscribers!');
+        return;
+      }
+      const failureMesssage = `Could not send to all subscribers. The following errors were encountered:\n${failures.map((failure) => failure.reason.message).join('\n')}`;
+      res.status(500).send(failureMesssage);
+    } catch (error) {
+      nonBlockingLog('Error while sending messages:', error);
+      res.status(500).send('Hit an unexpected error while sending messages.');
+    }
+  }
+
+  // #throws
+  async function sendMessageToEmail({ email, message }) {
+    sendMail(email, message, sendMailDone);
+
+    function sendMailDone(error) {
+      if (error) {
+        nonBlockingLog('Error from sending mail:', error.message);
+        throw new Error(`Could not send email to ${email}.`);
+      }
+    }
+  }
+
   // #throws
   async function addToken({ email }) {
     const token = randomId(16);
@@ -209,6 +257,16 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
     const storeText = JSON.stringify(store, null, 2);
     return fsPromises.writeFile(storePath, storeText, { encoding: 'utf8' });
   }
+}
+
+function checkBearer(req, res, next) {
+  if (req.headers.authorization !== `Bearer ${process.env.SENDER_PASSWORD}`) {
+    res.status(401);
+    res.send();
+    next('route');
+    return;
+  }
+  next();
 }
 
 module.exports = ListService;

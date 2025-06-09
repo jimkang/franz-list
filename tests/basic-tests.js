@@ -164,6 +164,20 @@ var testCases = [
       },
     ],
   },
+  {
+    name: 'Send to list with bad password',
+    method: 'POST',
+    path: '/send/First test list',
+    headers: {
+      Authorization: 'Bearer wrong-password',
+    },
+    body: {
+      subject: 'Hey',
+      message: 'Yo, this is a message for the whole list.',
+    },
+    MailSenderCtor: DoNotCallMailSender,
+    expectedStatusCode: 401,
+  },
 ];
 
 testCases.forEach(runTest);
@@ -231,6 +245,13 @@ function runTest(testCase) {
       var reqOpts = {
         method: theCase.method,
       };
+      if (theCase.body) {
+        reqOpts.body = JSON.stringify(theCase.body);
+      }
+      if (theCase.headers) {
+        reqOpts.headers = theCase.headers;
+      }
+
       try {
         var res = await fetch(url, reqOpts);
         checkResponse(res);
