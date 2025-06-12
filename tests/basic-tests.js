@@ -9,6 +9,7 @@ var noThrowJSONParse = require('no-throw-json-parse');
 var {
   TestMailSender,
   DoNotCallMailSender,
+  TestMultiAddressMailSender,
 } = require('./fixtures/test-mail-senders');
 
 const port = 5678;
@@ -167,16 +168,53 @@ var testCases = [
   {
     name: 'Send to list with bad password',
     method: 'POST',
-    path: '/send/First test list',
+    path: '/send',
     headers: {
       Authorization: 'Bearer wrong-password',
     },
     body: {
+      listId: 'First test list',
       subject: 'Hey',
       message: 'Yo, this is a message for the whole list.',
     },
     MailSenderCtor: DoNotCallMailSender,
     expectedStatusCode: 401,
+  },
+  {
+    name: 'Send to list successfully',
+    subcases: [
+      {
+        name: 'Add to list (less thorough test)',
+        method: 'GET',
+        path: '/list/First test list/add?email=smidgeo@fastmail.com',
+        expectedStatusCode: 201,
+        expectedMailCmdAddress: 'smidgeo@fastmail.com',
+      },
+      {
+        name: 'Add to list (less thorough test)',
+        method: 'GET',
+        path: '/list/First test list/add?email=drwily@fastmail.com',
+        expectedStatusCode: 201,
+        expectedMailCmdAddress: 'drwily@fastmail.com',
+      },
+      {
+        name: 'Send to list with correct password',
+        method: 'POST',
+        path: '/send',
+        headers: {
+          Authorization: `Bearer ${process.env.SENDER_PASSWORD}`,
+        },
+        body: {
+          listId: 'First test list',
+          subject: 'Hey',
+          message: 'Yo, this is a message for the whole list.',
+        },
+        MailSenderCtor: TestMultiAddressMailSender,
+        expectedAddresses: ['smidgeo@fastmail.com', 'drwily@fastmail.com'],
+        expectedStatusCode: 200,
+        expectedMailCmdStdIn: 'Yo, this is a message for the whole list.',
+      },
+    ],
   },
 ];
 
@@ -225,31 +263,36 @@ function runTest(testCase) {
     }
 
     async function runCase(theCase) {
+      var caseMailSender = mailSender;
       if (theCase.MailSenderCtor) {
-        let customEmailSender = theCase.MailSenderCtor();
-        customEmailSender.setT(t);
-        setSendEmailFn(customEmailSender.sendMail);
+        caseMailSender = theCase.MailSenderCtor();
+        caseMailSender.setT(t);
+        setSendEmailFn(caseMailSender.sendMail);
       }
 
       if (theCase.expectedMailCmdAddress) {
-        mailSender.setAddress(theCase.expectedMailCmdAddress);
+        caseMailSender.setAddress(theCase.expectedMailCmdAddress);
       }
       if (theCase.expectedMailCmdStdIn) {
-        mailSender.setStdIn(theCase.expectedMailCmdStdIn);
+        caseMailSender.setStdIn(theCase.expectedMailCmdStdIn);
       }
       if (theCase.expectedMailCmdAddress || theCase.expectedMailCmdStdIn) {
-        mailSender.setT(t);
+        caseMailSender.setT(t);
+      }
+      if (theCase.expectedAddresses) {
+        caseMailSender.setAddresses(theCase.expectedAddresses);
       }
 
       const url = `http://${serverHost}:${port}${theCase.path}`;
       var reqOpts = {
         method: theCase.method,
       };
-      if (theCase.body) {
-        reqOpts.body = JSON.stringify(theCase.body);
-      }
       if (theCase.headers) {
         reqOpts.headers = theCase.headers;
+      }
+      if (theCase.body) {
+        reqOpts.body = JSON.stringify(theCase.body);
+        reqOpts.headers['Content-Type'] = 'application/json';
       }
 
       try {
@@ -269,6 +312,9 @@ function runTest(testCase) {
 
         if (theCase.customCheckResponse) {
           await theCase.customCheckResponse(t, res);
+        }
+        if (caseMailSender?.checkAllAddressesMailed) {
+          caseMailSender.checkAllAddressesMailed();
         }
         // if (res.statusCode !== 200) {
         //   console.log('body:', body);

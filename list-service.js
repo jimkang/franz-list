@@ -43,7 +43,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   app.get('/health', respondOK);
   app.get('/list/:listId/add', cors(), addSubscriber);
   app.get('/list/:listId/remove', cors(), removeSubscriber);
-  app.post('/send/:listId', cors(), checkBearer, sendToList);
+  app.post('/send', cors(), checkBearer, sendToList);
   app.head(/.*/, respondHead);
 
   process.nextTick(done, null, { app, setSendEmail });
@@ -184,10 +184,6 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   }
 
   async function sendToList(req, res) {
-    if (!req.body.message) {
-      res.status(400).send('Missing message.');
-      return;
-    }
     if (!req.body.listId) {
       res.status(400).send('Missing listId.');
       return;
