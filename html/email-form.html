@@ -3,7 +3,41 @@
     <title>Email</title>
   </head>
   <body>
-       Provide an email to subscribe.
-       TODO: Actual form.
+    <div>Subscribe to <span id="list-name"></span></div>
+    <div>
+      Email: <input id="email-field"></input>
+    </div>
+    <div>
+      <button id="subscribe-button">Subscribe</button>
+    </div>
+    <div id="status-text"></div>
+
+    <script>
+      //const baseURL = '';
+      const baseURL = 'franz-list';
+      var searchParams = new URLSearchParams(window.location.search);
+      var listNameField = document.getElementById('list-name');
+      listNameField.textContent = searchParams.get('list');
+
+      var subButton = document.getElementById('subscribe-button');
+      subButton.addEventListener('click', onSubClick);
+
+      var emailField = document.getElementById('email-field');
+      var statusText = document.getElementById('status-text');
+
+      async function onSubClick() {
+        try {
+          var res = await fetch(`${baseURL}/list/${searchParams.get('list')}/add?email=${emailField.value}`);
+          if (res.ok) {
+            statusText.textContent = "You're subscribed! Check your email for confirmation.";
+          } else {
+            statusText.textContent = `There was a problem. Status: ${res.status} Message: ${await res.text()}`;
+          }
+        } catch (error) {
+            statusText.textContent = `There was a problem. Error: ${error.message}`;
+        }
+      }
+
+    </script>
   </body>
 </html>

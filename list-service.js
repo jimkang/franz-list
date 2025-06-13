@@ -44,6 +44,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   app.get('/list/:listId/add', cors(), addSubscriber);
   app.get('/list/:listId/remove', cors(), removeSubscriber);
   app.post('/send', cors(), checkBearer, sendToList);
+  app.get('/signup', signup);
   app.head(/.*/, respondHead);
 
   process.nextTick(done, null, { app, setSendEmail });
@@ -54,6 +55,11 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
 
   function respondOK(req, res) {
     res.status(204).send();
+  }
+
+  async function signup(req, res) {
+    res.status(400).sendFile('html/email-form.html', { root: __dirname });
+    return;
   }
 
   async function addSubscriber(req, res) {
