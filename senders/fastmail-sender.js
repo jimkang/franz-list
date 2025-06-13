@@ -103,7 +103,7 @@ async function draftResponse({
   }
 }
 
-async function sendMailWithFastmail(address, message, done) {
+async function sendMailWithFastmail({ address, message }, done) {
   if (!process.env.JMAP_USERNAME || !process.env.JMAP_TOKEN) {
     done(
       new Error('JMAP_USERNAME or JMAP_TOKEN environment variable not set.'),

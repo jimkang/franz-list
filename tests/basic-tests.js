@@ -50,8 +50,9 @@ var testCases = [
         method: 'GET',
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
         expectedStatusCode: 201,
-        expectedMailCmdAddress: 'smidgeo@fastmail.com',
-        expectedMailCmdStdIn: `Thanks for subscribing to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
+        expectedMailAddress: 'smidgeo@fastmail.com',
+        expectedMailSubject: 'First test list subscription',
+        expectedMailMessage: `Thanks for subscribing to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
 
         async customCheckResponse(t, res) {
           const body = await res.text();
@@ -88,8 +89,8 @@ var testCases = [
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
         MailSenderCtor: DoNotCallMailSender,
         expectedStatusCode: 202,
-        // expectedMailCmdAddress: 'smidgeo@fastmail.com',
-        // expectedMailCmdStdIn: `You are already subscribed to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
+        // expectedMailAddress: 'smidgeo@fastmail.com',
+        // expectedMailSubject: `You are already subscribed to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
 
         async customCheckResponse(t, res) {
           const body = await res.text();
@@ -187,14 +188,14 @@ var testCases = [
         method: 'GET',
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
         expectedStatusCode: 201,
-        expectedMailCmdAddress: 'smidgeo@fastmail.com',
+        expectedMailAddress: 'smidgeo@fastmail.com',
       },
       {
         name: 'Add to list (less thorough test)',
         method: 'GET',
         path: '/list/First test list/add?email=drwily@fastmail.com',
         expectedStatusCode: 201,
-        expectedMailCmdAddress: 'drwily@fastmail.com',
+        expectedMailAddress: 'drwily@fastmail.com',
       },
       {
         name: 'Send to list with correct password',
@@ -211,7 +212,8 @@ var testCases = [
         MailSenderCtor: TestMultiAddressMailSender,
         expectedAddresses: ['smidgeo@fastmail.com', 'drwily@fastmail.com'],
         expectedStatusCode: 200,
-        expectedMailCmdStdIn: 'Yo, this is a message for the whole list.',
+        expectedMailSubject: 'Hey',
+        expectedMailMessage: 'Yo, this is a message for the whole list.',
       },
     ],
   },
@@ -223,14 +225,14 @@ var testCases = [
         method: 'GET',
         path: '/list/First test list/add?email=smidgeo@fastmail.com',
         expectedStatusCode: 201,
-        expectedMailCmdAddress: 'smidgeo@fastmail.com',
+        expectedMailAddress: 'smidgeo@fastmail.com',
       },
       {
         name: 'Add to list (less thorough test)',
         method: 'GET',
         path: '/list/First test list/add?email=drwilyyy@fastmail.com',
         expectedStatusCode: 201,
-        expectedMailCmdAddress: 'drwilyyy@fastmail.com',
+        expectedMailAddress: 'drwilyyy@fastmail.com',
       },
       {
         name: 'Send to list',
@@ -250,7 +252,8 @@ var testCases = [
         expectedStatusCode: 500,
         expectedResponseText:
           'Could not send to all subscribers. The following errors were encountered:\nCould not send email to drwilyyy@fastmail.com.',
-        expectedMailCmdStdIn: 'Yo, this is a message for the whole list.',
+        expectedMailSubject: 'Hey',
+        expectedMailMessage: 'Yo, this is a message for the whole list.',
       },
     ],
   },
@@ -309,13 +312,21 @@ function runTest(testCase) {
         setSendEmailFn(caseMailSender.sendMail);
       }
 
-      if (theCase.expectedMailCmdAddress) {
-        caseMailSender.setAddress(theCase.expectedMailCmdAddress);
+      if (theCase.expectedMailAddress) {
+        caseMailSender.setAddress(theCase.expectedMailAddress);
       }
-      if (theCase.expectedMailCmdStdIn) {
-        caseMailSender.setStdIn(theCase.expectedMailCmdStdIn);
+      if (theCase.expectedMailSubject) {
+        caseMailSender.setSubject(theCase.expectedMailSubject);
       }
-      if (theCase.expectedMailCmdAddress || theCase.expectedMailCmdStdIn) {
+      if (theCase.expectedMailMessage) {
+        caseMailSender.setMessage(theCase.expectedMailMessage);
+      }
+      if (
+        theCase.expectedMailAddress ||
+        theCase.expectedAddresses ||
+        theCase.expectedMailSubject ||
+        theCase.expectedMailMessage
+      ) {
         caseMailSender.setT(t);
       }
       if (theCase.expectedAddresses) {

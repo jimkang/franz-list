@@ -105,7 +105,14 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       }
 
       const message = `Thanks for subscribing to ${list.listName}! To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${req.query.email}&token=${token}`;
-      sendMail(req.query.email, message, sendMailDone);
+      sendMail(
+        {
+          address: req.query.email,
+          subject: `${list.listName} subscription`,
+          message,
+        },
+        sendMailDone,
+      );
 
       function sendMailDone(error) {
         if (error) {
@@ -196,8 +203,13 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       return;
     }
 
+    const subject = req.body.subject || req.body.message.slice(0, 20);
     var sendPromises = list.subscribers.map((subscriber) =>
-      sendMessageToEmail({ email: subscriber, message: req.body.message }),
+      sendMessageToEmail({
+        email: subscriber,
+        subject,
+        message: req.body.message,
+      }),
     );
     try {
       var results = await Promise.allSettled(sendPromises);
@@ -215,8 +227,9 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   }
 
   // #throws
-  async function sendMessageToEmail({ email, message }) {
-    sendMail(email, message, sendMailDone);
+  async function sendMessageToEmail({ email, subject, message }) {
+    sendMail({ address: email, subject, message }, sendMailDone);
+    // TODO: Stamp on unsubscribe link.
 
     function sendMailDone(error) {
       if (error) {

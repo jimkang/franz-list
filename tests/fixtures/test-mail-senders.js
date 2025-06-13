@@ -1,33 +1,36 @@
 function TestMailSender() {
-  var expectedMailCmdAddress;
-  var expectedMailCmdStdIn;
+  var expectedMailAddress;
+  var expectedMailSubject;
+  var expectedMailMessage;
   var t;
 
   return {
     setAddress(address) {
-      expectedMailCmdAddress = address;
+      expectedMailAddress = address;
     },
-    setStdIn(stdIn) {
-      expectedMailCmdStdIn = stdIn;
+    setSubject(subject) {
+      expectedMailSubject = subject;
+    },
+    setMessage(message) {
+      expectedMailMessage = message;
     },
     setT(theT) {
       t = theT;
     },
-    sendMail(address, stdIn, done) {
+    sendMail({ address, subject, message }, done) {
       if (t) {
-        if (expectedMailCmdAddress) {
+        if (expectedMailAddress) {
           t.equal(
             address,
-            expectedMailCmdAddress,
+            expectedMailAddress,
             'Sent email address is correct.',
           );
         }
-        if (expectedMailCmdStdIn) {
-          t.equal(
-            stdIn,
-            expectedMailCmdStdIn,
-            'Sent stdin content is correct.',
-          );
+        if (expectedMailSubject) {
+          t.equal(subject, expectedMailSubject, 'Sent subject is correct.');
+        }
+        if (expectedMailMessage) {
+          t.equal(message, expectedMailMessage, 'Sent message is correct.');
         }
       }
       queueMicrotask(done);
@@ -40,11 +43,12 @@ function DoNotCallMailSender() {
 
   return {
     setAddress() {},
-    setStdIn() {},
+    setSubject() {},
+    setMessage() {},
     setT(theT) {
       t = theT;
     },
-    sendMail(address, stdIn, done) {
+    sendMail(opts, done) {
       if (t) {
         t.fail('sendMail is not called.');
       }
@@ -54,18 +58,22 @@ function DoNotCallMailSender() {
 }
 
 function TestMultiAddressMailSender() {
-  var expectedMailCmdAddresses;
-  var expectedMailCmdStdIn;
+  var expectedMailAddresses;
+  var expectedMailSubject;
+  var expectedMailMessage;
   var t;
   var addressesMailed = [];
   var failAddresses;
 
   return {
     setAddresses(addresses) {
-      expectedMailCmdAddresses = addresses;
+      expectedMailAddresses = addresses;
     },
-    setStdIn(stdIn) {
-      expectedMailCmdStdIn = stdIn;
+    setSubject(subject) {
+      expectedMailSubject = subject;
+    },
+    setMessage(message) {
+      expectedMailMessage = message;
     },
     setT(theT) {
       t = theT;
@@ -73,7 +81,7 @@ function TestMultiAddressMailSender() {
     setFailureTriggeringAddresses(theFailAddresses) {
       failAddresses = theFailAddresses;
     },
-    sendMail(address, stdIn, done) {
+    sendMail({ address, subject, message }, done) {
       if (failAddresses && failAddresses.includes(address)) {
         done(new Error(`Could not send email to ${address}`));
         return;
@@ -81,18 +89,17 @@ function TestMultiAddressMailSender() {
 
       if (t) {
         addressesMailed.push(address);
-        if (expectedMailCmdAddresses) {
+        if (expectedMailAddresses) {
           t.ok(
-            expectedMailCmdAddresses.includes(address),
+            expectedMailAddresses.includes(address),
             'Sent email address is correct.',
           );
         }
-        if (expectedMailCmdStdIn) {
-          t.equal(
-            stdIn,
-            expectedMailCmdStdIn,
-            'Sent stdin content is correct.',
-          );
+        if (expectedMailSubject) {
+          t.equal(subject, expectedMailSubject, 'Sent subject correct.');
+        }
+        if (expectedMailMessage) {
+          t.equal(message, expectedMailMessage, 'Sent message is correct.');
         }
       }
       queueMicrotask(done);
@@ -100,7 +107,7 @@ function TestMultiAddressMailSender() {
     checkAllAddressesMailed() {
       t.deepEqual(
         addressesMailed.sort(),
-        expectedMailCmdAddresses.sort(),
+        expectedMailAddresses.sort(),
         'All addresses were mailed.',
       );
     },
