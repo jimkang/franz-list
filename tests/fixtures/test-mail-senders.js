@@ -58,6 +58,7 @@ function TestMultiAddressMailSender() {
   var expectedMailCmdStdIn;
   var t;
   var addressesMailed = [];
+  var failAddresses;
 
   return {
     setAddresses(addresses) {
@@ -69,7 +70,15 @@ function TestMultiAddressMailSender() {
     setT(theT) {
       t = theT;
     },
+    setFailureTriggeringAddresses(theFailAddresses) {
+      failAddresses = theFailAddresses;
+    },
     sendMail(address, stdIn, done) {
+      if (failAddresses && failAddresses.includes(address)) {
+        done(new Error(`Could not send email to ${address}`));
+        return;
+      }
+
       if (t) {
         addressesMailed.push(address);
         if (expectedMailCmdAddresses) {

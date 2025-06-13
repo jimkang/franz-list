@@ -25,7 +25,6 @@ const storePath = initialStateStorePath.replace(
   'initial-state',
   'working-copy',
 );
-fs.copyFileSync(initialStateStorePath, storePath);
 
 const expectedToken = 'pUtuZmLloZJUqccS';
 
@@ -216,6 +215,45 @@ var testCases = [
       },
     ],
   },
+  {
+    name: 'Send to list with a bad email address',
+    subcases: [
+      {
+        name: 'Add to list (less thorough test)',
+        method: 'GET',
+        path: '/list/First test list/add?email=smidgeo@fastmail.com',
+        expectedStatusCode: 201,
+        expectedMailCmdAddress: 'smidgeo@fastmail.com',
+      },
+      {
+        name: 'Add to list (less thorough test)',
+        method: 'GET',
+        path: '/list/First test list/add?email=drwilyyy@fastmail.com',
+        expectedStatusCode: 201,
+        expectedMailCmdAddress: 'drwilyyy@fastmail.com',
+      },
+      {
+        name: 'Send to list',
+        method: 'POST',
+        path: '/send',
+        headers: {
+          Authorization: `Bearer ${process.env.SENDER_PASSWORD}`,
+        },
+        body: {
+          listId: 'First test list',
+          subject: 'Hey',
+          message: 'Yo, this is a message for the whole list.',
+        },
+        MailSenderCtor: TestMultiAddressMailSender,
+        failAddresses: ['drwilyyy@fastmail.com'],
+        expectedAddresses: ['smidgeo@fastmail.com'],
+        expectedStatusCode: 500,
+        expectedResponseText:
+          'Could not send to all subscribers. The following errors were encountered:\nCould not send email to drwilyyy@fastmail.com.',
+        expectedMailCmdStdIn: 'Yo, this is a message for the whole list.',
+      },
+    ],
+  },
 ];
 
 testCases.forEach(runTest);
@@ -224,6 +262,8 @@ function runTest(testCase) {
   test(testCase.name, testRequest);
 
   function testRequest(t) {
+    fs.copyFileSync(initialStateStorePath, storePath);
+
     var server;
     var setSendEmailFn;
 
@@ -261,7 +301,6 @@ function runTest(testCase) {
       // Sadly, I guess the server takes a while to close.
       server.close(() => setTimeout(t.end, 100));
     }
-
     async function runCase(theCase) {
       var caseMailSender = mailSender;
       if (theCase.MailSenderCtor) {
@@ -281,6 +320,9 @@ function runTest(testCase) {
       }
       if (theCase.expectedAddresses) {
         caseMailSender.setAddresses(theCase.expectedAddresses);
+      }
+      if (theCase.failAddresses) {
+        caseMailSender.setFailureTriggeringAddresses(theCase.failAddresses);
       }
 
       const url = `http://${serverHost}:${port}${theCase.path}`;
@@ -309,6 +351,14 @@ function runTest(testCase) {
           theCase.expectedStatusCode,
           'Correct status code is returned.',
         );
+
+        if (theCase.expectedResponseText) {
+          t.equal(
+            await res.text(),
+            theCase.expectedResponseText,
+            'Response text is correct.',
+          );
+        }
 
         if (theCase.customCheckResponse) {
           await theCase.customCheckResponse(t, res);
