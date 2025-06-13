@@ -1,0 +1,11 @@
+{
+  "tokensForUsers": {
+  },
+  "lists": {
+    "First_test_list": {
+      "listName": "First_test_list",
+      "listFile": "first-test-list.txt",
+      "subscribers": []
+    }
+  }
+}

@@ -21,6 +21,9 @@ sync:
 overwrite-stores:
 	rsync -avz $(HOMEDIR)/stores/* $(USER)@$(SERVER):$(APPDIR)/stores/
 
+reset-local-store:
+	cp stores/starter-store.json stores/main-store.json
+
 restart-remote:
 	$(PRIVSSHCMD) "service $(PROJECTNAME) restart"
 
