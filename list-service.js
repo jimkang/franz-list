@@ -210,13 +210,8 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
     }
 
     const subject = req.body.subject || req.body.message.slice(0, 20);
-    var sendPromises = list.subscribers.map((subscriber) =>
-      sendMessageToEmail({
-        email: subscriber,
-        subject,
-        message: req.body.message,
-      }),
-    );
+    var sendPromises = list.subscribers.map(sendToSubscriber);
+
     try {
       var results = await Promise.allSettled(sendPromises);
       var failures = results.filter((result) => result.status === 'rejected');
@@ -230,12 +225,34 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       nonBlockingLog('Error while sending messages:', error);
       res.status(500).send('Hit an unexpected error while sending messages.');
     }
+
+    function sendToSubscriber(subscriber) {
+      var tokenObj = store.tokensForUsers[subscriber];
+
+      if (!tokenObj) {
+        return Promise.reject(
+          new Error('Could not get token for ' + subscriber),
+        );
+      }
+
+      const message =
+        req.body.message +
+        `\n--
+      This is a message from the ${list.listName} mailing list.
+To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${subscriber}&token=${tokenObj.token}
+To invite someone to subscribe, send them to: ${serviceBaseURL}/signup?list=${list.listName}`;
+
+      return sendMessageToEmail({
+        email: subscriber,
+        subject,
+        message,
+      });
+    }
   }
 
   // #throws
   async function sendMessageToEmail({ email, subject, message }) {
     sendMail({ address: email, subject, message }, sendMailDone);
-    // TODO: Stamp on unsubscribe link.
 
     function sendMailDone(error) {
       if (error) {
