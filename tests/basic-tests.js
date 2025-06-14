@@ -40,7 +40,7 @@ var testCases = [
         async customCheckResponse(t, res) {
           const body = await res.text();
           t.ok(
-            body.includes('Provide an email to subscribe'),
+            body.includes('<button id="subscribe-button">Subscribe</button>'),
             'Without email, an email form is presented.',
           );
         },
