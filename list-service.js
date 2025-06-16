@@ -237,12 +237,13 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
         );
       }
 
+      const signUpLink = `${serviceBaseURL}/signup?list=${list.listName}`;
       const message =
         req.body.message +
-        `\n--
-      This is a message from the ${list.listName} mailing list.
-To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${subscriber}&token=${tokenObj.token}
-To invite someone to subscribe, send them to: ${serviceBaseURL}/signup?list=${list.listName}`;
+        `\n<hr><br>
+      This is a message from the ${list.listName} mailing list.<br>
+<a href="${serviceBaseURL}/list/${list.listName}/remove?email=${subscriber}&token=${tokenObj.token}">Unsubscribe</a><br>
+To invite someone to subscribe, send them to <a href="${signUpLink}">${signUpLink}</a>`;
 
       return new Promise(sendExecutor);
 
@@ -251,7 +252,7 @@ To invite someone to subscribe, send them to: ${serviceBaseURL}/signup?list=${li
         function sendMailDone(error) {
           if (error) {
             nonBlockingLog('Error from sending mail:', error.message);
-            reject(VError(error, `Could not send email to ${subscriber}.`));
+            reject(error);
             return;
           }
           resolve();

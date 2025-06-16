@@ -60,7 +60,7 @@ function DoNotCallMailSender() {
 function TestMultiAddressMailSender() {
   var expectedMailAddresses;
   var expectedMailSubject;
-  var expectedMailMessageRegex;
+  var expectedMailMessageRegexes;
   var t;
   var addressesMailed = [];
   var failAddresses;
@@ -72,8 +72,8 @@ function TestMultiAddressMailSender() {
     setSubject(subject) {
       expectedMailSubject = subject;
     },
-    setMessageRegex(messageRegex) {
-      expectedMailMessageRegex = messageRegex;
+    setMessageRegexes(messageRegexes) {
+      expectedMailMessageRegexes = messageRegexes;
     },
     setT(theT) {
       t = theT;
@@ -98,11 +98,10 @@ function TestMultiAddressMailSender() {
         if (expectedMailSubject) {
           t.equal(subject, expectedMailSubject, 'Sent subject correct.');
         }
-        if (expectedMailMessageRegex) {
-          t.ok(
-            expectedMailMessageRegex.test(message),
-            'Sent message is correct.',
-          );
+        if (expectedMailMessageRegexes) {
+          for (let regex of expectedMailMessageRegexes) {
+            t.ok(regex.test(message), 'Sent message is correct.');
+          }
         }
       }
       queueMicrotask(done);

@@ -28,6 +28,13 @@ const storePath = initialStateStorePath.replace(
 
 const expectedToken = 'pUtuZmLloZJUqccS';
 
+var messageRegexListA = [
+  /Yo, this is a message for the whole list\./,
+  /This is a message from the First test list mailing list\./,
+  /<a href="http:\/\/localhost:5678\/list\/First test list\/remove\?email=\w+@\w+\.\w+&token=\w{16}">Unsubscribe<\/a>/,
+  /To invite someone to subscribe, send them to: <a href="http:\/\/localhost:5678\/signup\?list=First test list">/,
+];
+
 var testCases = [
   {
     name: 'Add to list, starting without a token',
@@ -213,8 +220,7 @@ var testCases = [
         expectedAddresses: ['smidgeo@fastmail.com', 'drwily@fastmail.com'],
         expectedStatusCode: 200,
         expectedMailSubject: 'Hey',
-        expectedMailMessageRegex:
-          /Yo, this is a message for the whole list\.\s+--\s+This is a message from the First test list mailing list\.\nTo unsubscribe, click here: http:\/\/localhost:5678\/list\/First test list\/remove\?email=\w+@\w+\.\w+&token=\w{16}\nTo invite someone to subscribe, send them to: http:\/\/localhost:5678\/signup\?list=First test list/,
+        expectedMailMessageRegexeses: messageRegexListA,
       },
     ],
   },
@@ -252,10 +258,9 @@ var testCases = [
         expectedAddresses: ['smidgeo@fastmail.com'],
         expectedStatusCode: 500,
         expectedResponseText:
-          'Could not send to all subscribers. The following errors were encountered:\nCould not send email to drwilyyy@fastmail.com.',
+          'Could not send to all subscribers. The following errors were encountered:\nCould not send email to drwilyyy@fastmail.com',
         expectedMailSubject: 'Hey',
-        expectedMailMessageRegex:
-          /Yo, this is a message for the whole list\.\s+--\s+This is a message from the First test list mailing list\.\nTo unsubscribe, click here: http:\/\/localhost:5678\/list\/First test list\/remove\?email=\w+@\w+\.\w+&token=\w{16}\nTo invite someone to subscribe, send them to: http:\/\/localhost:5678\/signup\?list=First test list/,
+        expectedMailMessageRegexeses: messageRegexListA,
       },
     ],
   },
@@ -323,15 +328,15 @@ function runTest(testCase) {
       if (theCase.expectedMailMessage) {
         caseMailSender.setMessage(theCase.expectedMailMessage);
       }
-      if (theCase.expectedMailMessageRegex) {
-        caseMailSender.setMessageRegex(theCase.expectedMailMessageRegex);
+      if (theCase.expectedMailMessageRegexes) {
+        caseMailSender.setMessageRegexes(theCase.expectedMailMessageRegex);
       }
       if (
         theCase.expectedMailAddress ||
         theCase.expectedAddresses ||
         theCase.expectedMailSubject ||
         theCase.expectedMailMessage ||
-        theCase.expectedMailMessageRegex
+        theCase.expectedMailMessageRegexes
       ) {
         caseMailSender.setT(t);
       }
