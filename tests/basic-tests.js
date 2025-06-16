@@ -59,7 +59,7 @@ var testCases = [
         expectedStatusCode: 201,
         expectedMailAddress: 'smidgeo@fastmail.com',
         expectedMailSubject: 'First test list subscription',
-        expectedMailMessage: `Thanks for subscribing to First test list! To unsubscribe, click here: http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}`,
+        expectedMailMessage: `Thanks for subscribing to First test list!<br>To unsubscribe, <a href="http://${serverHost}:${port}/list/First test list/remove?email=smidgeo@fastmail.com&token=${expectedToken}">click here</a>.`,
 
         async customCheckResponse(t, res) {
           const body = await res.text();

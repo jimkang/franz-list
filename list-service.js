@@ -105,7 +105,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
         return;
       }
 
-      const message = `Thanks for subscribing to ${list.listName}! To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${req.query.email}&token=${token}`;
+      const message = `Thanks for subscribing to ${list.listName}!<br>To unsubscribe, <a href="${serviceBaseURL}/list/${list.listName}/remove?email=${req.query.email}&token=${token}">click here</a>.`;
       sendMail(
         {
           address: req.query.email,
