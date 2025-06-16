@@ -9,7 +9,7 @@ var http = require('http');
 var { sendMailWithFastmail } = require('./senders/fastmail-sender');
 require('dotenv').config();
 
-const port = 6667;
+const port = 6777;
 
 ListService(
   {
