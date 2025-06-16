@@ -13,10 +13,11 @@ run:
 	node start-service.js
 
 sync:
-	rsync -a $(HOMEDIR)/ $(USER)@$(SERVER):$(APPDIR) --exclude node_modules/ \
+	rsync -avz $(HOMEDIR)/ $(USER)@$(SERVER):$(APPDIR) --exclude node_modules/ \
 		--exclude stores/ \
 	  --omit-dir-times --no-perms
 	$(SSHCMD) "cd /opt/$(PROJECTNAME) && npm install"
+	rsync -avz $(HOMEDIR)/html/ $(USER)@$(SERVER):$(STATIC_DIR)
 
 overwrite-stores:
 	rsync -avz $(HOMEDIR)/stores/* $(USER)@$(SERVER):$(APPDIR)/stores/
@@ -41,6 +42,7 @@ install-service:
 
 set-up-app-dir:
 	$(SSHCMD) "mkdir -p $(APPDIR)"
+	$(SSHCMD) "mkdir -p $(STATIC_DIR)"
 
 set-permissions:
 	$(SSHCMD) "chmod +x $(APPDIR)/start-service.js"

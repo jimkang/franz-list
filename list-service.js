@@ -39,12 +39,12 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
 
   app.use(cors());
   app.use(bodyParser.json());
+  app.use('/misc', express.static('html'));
 
   app.get('/health', respondOK);
   app.get('/list/:listId/add', cors(), addSubscriber);
   app.get('/list/:listId/remove', cors(), removeSubscriber);
   app.post('/send', cors(), checkBearer, sendToList);
-  app.get('/signup', signup);
   app.head(/.*/, respondHead);
 
   process.nextTick(done, null, { app, setSendEmail });
@@ -57,18 +57,13 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
     res.status(200).send('OK!');
   }
 
-  async function signup(req, res) {
-    res.status(400).sendFile('html/email-form.html', { root: __dirname });
-    return;
-  }
-
   async function addSubscriber(req, res) {
     if (!req.params.listId) {
       res.status(400).send('Missing `listId` in path.');
       return;
     }
     if (!req.query.email) {
-      res.status(400).sendFile('html/email-form.html', { root: __dirname });
+      res.redirect(301, '/misc/signup');
       return;
     }
 
@@ -237,7 +232,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
         );
       }
 
-      const signUpLink = `${serviceBaseURL}/signup?list=${list.listName}`;
+      const signUpLink = `/misc/signup?list=${list.listName}`;
       const message =
         req.body.message +
         `<hr><br>

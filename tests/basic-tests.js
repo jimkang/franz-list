@@ -43,7 +43,7 @@ var testCases = [
         name: 'Add to list without an email',
         method: 'GET',
         path: '/list/First test list/add',
-        expectedStatusCode: 400,
+        expectedStatusCode: 200,
         async customCheckResponse(t, res) {
           const body = await res.text();
           t.ok(
