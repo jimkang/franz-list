@@ -232,7 +232,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
         );
       }
 
-      const signUpLink = `/misc/signup?list=${list.listName}`;
+      const signUpLink = `${process.env.STATIC_BASE_URL}/signup?list=${list.listName}`;
       const message =
         req.body.message +
         `<hr><br>
