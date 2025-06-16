@@ -25,3 +25,5 @@ This app is not battle-tested nor meant for any application that deals with safe
 - Edit `start-server.js` to pass the `sendMail` function of your choosing.
 This repo provides a Fastmail one and sendmail one (that just shells out to the Unix `sendmail` command). If you want to create a new sender, implement a `sendMail` function with this signature: `function sendMailFn({ address, subject, message }, done)` where `done` is an error-first Node-style callback that takes an error as the first argument if there was a problem or `null` or `undefined` if there was not.
 - Start the service with `make run`.
+
+![Franz Liszt playing piano for friends.](franz-liszt-newsletter.png)
