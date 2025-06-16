@@ -213,7 +213,9 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       var results = await Promise.allSettled(sendPromises);
       var failures = results.filter((result) => result.status === 'rejected');
       if (failures.length < 1) {
-        res.status(200).send('Message sent to all subscribers!');
+        res
+          .status(200)
+          .send('Message sent to all subscribers!\n' + results.join('\n'));
         return;
       }
       const failureMesssage = `Could not send to all subscribers. The following errors were encountered:\n${failures.map((failure) => failure.reason.message).join('\n')}`;
@@ -252,7 +254,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
             reject(error);
             return;
           }
-          resolve();
+          resolve(`Sent "${subject}" to ${subscriber}.`);
         }
       }
     }

@@ -24,7 +24,7 @@ overwrite-stores:
 	rsync -avz $(HOMEDIR)/stores/* $(USER)@$(SERVER):$(APPDIR)/stores/
 
 back-up-stores:
-	rsync -avz $(USER)@$(SERVER):$(APPDIR)/stores/ $(HOMEDIR)/../franz-list/store-backups/
+	rsync -avz $(USER)@$(SERVER):$(APPDIR)/stores/ $(HOMEDIR)/../fl-store-backups/
 
 reset-local-store:
 	cp stores/starter-store.json stores/main-store.json
