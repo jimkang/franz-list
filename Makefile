@@ -22,6 +22,7 @@ sync:
 
 overwrite-stores:
 	rsync -avz $(HOMEDIR)/stores/* $(USER)@$(SERVER):$(APPDIR)/stores/
+	make restart-remote
 
 back-up-stores:
 	rsync -avz $(USER)@$(SERVER):$(APPDIR)/stores/ $(HOMEDIR)/../fl-store-backups/

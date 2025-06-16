@@ -211,14 +211,22 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
 
     try {
       var results = await Promise.allSettled(sendPromises);
+      var successMessages = results
+        .filter((result) => result.status === 'fulfilled')
+        .map((r) => r.value);
       var failures = results.filter((result) => result.status === 'rejected');
       if (failures.length < 1) {
         res
           .status(200)
-          .send('Message sent to all subscribers!\n' + results.join('\n'));
+          .send(
+            'Message sent to all subscribers!\n' + successMessages.join('\n'),
+          );
         return;
       }
-      const failureMesssage = `Could not send to all subscribers. The following errors were encountered:\n${failures.map((failure) => failure.reason.message).join('\n')}`;
+      const failureMesssage =
+        `Could not send to all subscribers. The following errors were encountered:\n${failures.map((failure) => failure.reason.message).join('\n')}` +
+        'but did get it to:' +
+        successMessages.join('\n');
       res.status(500).send(failureMesssage);
     } catch (error) {
       nonBlockingLog('Error while sending messages:', error);
