@@ -54,7 +54,7 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
   }
 
   function respondOK(req, res) {
-    res.status(204).send();
+    res.status(200).send('OK!');
   }
 
   async function signup(req, res) {
@@ -188,6 +188,8 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
         res.status(500).send('Could not commit to the list. Try again, maybe.');
         return;
       }
+
+      nonBlockingLog('Unsubscribe ' + req.query.email);
       res
         .status(201)
         .send(
@@ -257,7 +259,7 @@ To invite someone to subscribe, send them to: ${serviceBaseURL}/signup?list=${li
     function sendMailDone(error) {
       if (error) {
         nonBlockingLog('Error from sending mail:', error.message);
-        throw new Error(`Could not send email to ${email}.`);
+        throw VError(error, `Could not send email to ${email}.`);
       }
     }
   }
