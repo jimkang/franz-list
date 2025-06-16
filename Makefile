@@ -15,12 +15,16 @@ run:
 sync:
 	rsync -avz $(HOMEDIR)/ $(USER)@$(SERVER):$(APPDIR) --exclude node_modules/ \
 		--exclude stores/ \
+		--exclude .git/ \
 	  --omit-dir-times --no-perms
 	$(SSHCMD) "cd /opt/$(PROJECTNAME) && npm install"
 	rsync -avz $(HOMEDIR)/html/ $(USER)@$(SERVER):$(STATIC_DIR)
 
 overwrite-stores:
 	rsync -avz $(HOMEDIR)/stores/* $(USER)@$(SERVER):$(APPDIR)/stores/
+
+back-up-stores:
+	rsync -avz $(USER)@$(SERVER):$(APPDIR)/stores/ $(HOMEDIR)/../franz-list/store-backups/
 
 reset-local-store:
 	cp stores/starter-store.json stores/main-store.json
