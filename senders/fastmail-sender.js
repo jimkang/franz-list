@@ -48,6 +48,7 @@ async function draftResponse({
   headers,
   username,
   to,
+  subject,
   apiUrl,
   accountId,
   draftId,
@@ -57,7 +58,7 @@ async function draftResponse({
   const draftObject = {
     from: [{ email: username }],
     to: [{ email: to }],
-    subject: 'Hello, world!',
+    subject,
     keywords: { $draft: true },
     mailboxIds: { [draftId]: true },
     bodyValues: { body: { value: messageBody, charset: 'utf-8' } },
@@ -103,7 +104,7 @@ async function draftResponse({
   }
 }
 
-async function sendMailWithFastmail({ address, message }, done) {
+async function sendMailWithFastmail({ address, subject, message }, done) {
   if (!process.env.JMAP_USERNAME || !process.env.JMAP_TOKEN) {
     done(
       new Error('JMAP_USERNAME or JMAP_TOKEN environment variable not set.'),
@@ -134,6 +135,7 @@ async function sendMailWithFastmail({ address, message }, done) {
       headers,
       username,
       to: address,
+      subject,
       apiUrl,
       accountId,
       draftId,

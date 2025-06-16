@@ -26,7 +26,7 @@ var message = fs.readFileSync(contentFilePath, { encoding: 'utf8' });
       },
       body: JSON.stringify({ listId, subject, message }),
     });
-    console.log('Receive response:', res.status, await res.text());
+    console.log('Received response:', res.status, await res.text());
   } catch (error) {
     console.error('Error while making request:', error);
   }
