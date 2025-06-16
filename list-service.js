@@ -244,22 +244,18 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
 To unsubscribe, click here: ${serviceBaseURL}/list/${list.listName}/remove?email=${subscriber}&token=${tokenObj.token}
 To invite someone to subscribe, send them to: ${serviceBaseURL}/signup?list=${list.listName}`;
 
-      return sendMessageToEmail({
-        email: subscriber,
-        subject,
-        message,
-      });
-    }
-  }
+      return new Promise(sendExecutor);
 
-  // #throws
-  async function sendMessageToEmail({ email, subject, message }) {
-    sendMail({ address: email, subject, message }, sendMailDone);
-
-    function sendMailDone(error) {
-      if (error) {
-        nonBlockingLog('Error from sending mail:', error.message);
-        throw VError(error, `Could not send email to ${email}.`);
+      function sendExecutor(resolve, reject) {
+        sendMail({ address: subscriber, subject, message }, sendMailDone);
+        function sendMailDone(error) {
+          if (error) {
+            nonBlockingLog('Error from sending mail:', error.message);
+            reject(VError(error, `Could not send email to ${subscriber}.`));
+            return;
+          }
+          resolve();
+        }
       }
     }
   }
