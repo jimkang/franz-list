@@ -10,7 +10,7 @@ A simple newsletter mailing list service that supports:
 
 ## Is it secure?
 
-This app is not battle-tested nor meant for any application that deals with safety or money. It does make lazier vandals a little bit of work, though.
+This app is not battle-tested nor meant for any application that deals with safety or money. It does make lazier vandals do a little bit of work, though.
 
 # Setup
 
