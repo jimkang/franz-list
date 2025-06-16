@@ -61,8 +61,11 @@ async function draftResponse({
     subject,
     keywords: { $draft: true },
     mailboxIds: { [draftId]: true },
-    bodyValues: { body: { value: messageBody, charset: 'utf-8' } },
-    textBody: [{ partId: 'body', type: 'text/plain' }],
+    bodyStructure: {
+      type: 'text/html',
+      partId: 'part1',
+    },
+    bodyValues: { part1: { value: messageBody, charset: 'utf-8' } },
   };
 
   const response = await fetch(apiUrl, {
@@ -90,7 +93,7 @@ async function draftResponse({
   });
 
   const data = await response.json();
-  console.log(JSON.stringify(data, null, 2));
+  // console.log(JSON.stringify(data, null, 2));
 
   // TODO: What else do we neet to look for in this response?
   for (let entry of data.methodResponses) {
