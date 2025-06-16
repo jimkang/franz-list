@@ -240,10 +240,12 @@ function ListService({ storePath, sendMail, seed, serviceBaseURL }, done) {
       const signUpLink = `${serviceBaseURL}/signup?list=${list.listName}`;
       const message =
         req.body.message +
-        `\n<hr><br>
-      This is a message from the ${list.listName} mailing list.<br>
-<a href="${serviceBaseURL}/list/${list.listName}/remove?email=${subscriber}&token=${tokenObj.token}">Unsubscribe</a><br>
-To invite someone to subscribe, send them to <a href="${signUpLink}">${signUpLink}</a>`;
+        `<hr><br>
+      This has been a message from the ${list.listName} mailing list.<br>
+<ul>
+<li>To unsubscribe, <a href="${serviceBaseURL}/list/${list.listName}/remove?email=${subscriber}&token=${tokenObj.token}">click here</a></li>
+<li>To invite someone to subscribe, send them to <a href="${signUpLink}">${signUpLink}</a></li>
+</ul>`;
 
       return new Promise(sendExecutor);
 
